@@ -1,2 +1,11 @@
 
 /1d-burgers/output
+1-d/output
+1-d/output/spectraldata
+1-d/output_hires_original/
+1-d/1d-burgers/output/
+1-d/spectraldata/
+1d-test/1d-burgers-old/1d-lowres-test/
+1d-test/1d-burgers-spectral/spectral_train/
+output/
+.DS_Store
