@@ -4,6 +4,7 @@ import os, argparse, sys, random, json
 import matplotlib.pyplot as plt
 
 
+from numba import jit
     
 
 class Burgers_1d:
@@ -58,7 +59,7 @@ class Burgers_1d:
             self.l_values = np.array(data['l_values'])
 
 
-
+    @jit
     def generate_forcing(self, T=0, N_force=20):
         # Generate forcing field
         self.forcing = np.zeros_like(self.xgrid)
@@ -83,15 +84,43 @@ class Burgers_1d:
 
         self.save_parameters_to_json()
 
+   
+
+    # def step(self, velocity_in, t = 0,dt = 0.001):
+    #     # Generate forcing field
+    #     self.generate_forcing(T=t)
+    #     # Solve Burgers equation
+    #     v1 = diffuse.explicit(velocity_in, self.viscosity, dt) + self.forcing * dt
+    #     v2 = advect.semi_lagrangian(v1, v1, dt)
+    #     return v2
+
+    def step(self, velocity_in, t=0, dt=0.001):
+        # k1 is the slope at the start of the interval
+        k1 = self.equation(velocity_in, t)
+        
+        # k2 is the slope at the midpoint, using k1 to estimate y at t + dt/2
+        y_temp = velocity_in + 0.5 * dt * k1
+        k2 = self.equation(y_temp, t + 0.5 * dt)
+        
+        # k3 is another slope at the midpoint, using k2 for estimation
+        y_temp = velocity_in + 0.5 * dt * k2
+        k3 = self.equation(y_temp, t + 0.5 * dt)
+        
+        # k4 is the slope at the end of the interval, using k3 for estimation
+        y_temp = velocity_in + dt * k3
+        k4 = self.equation(y_temp, t + dt)
+         
+        # Combine the slopes to estimate the new state
+        velocity_out = velocity_in + (dt / 6.0) * (k1 + 2*k2 + 2*k3 + k4)
+        
+        return velocity_out
 
 
-    def step(self, velocity_in, t = 0,dt = 0.001):
-        # Generate forcing field
+    def equation(self, velocity, t):
         self.generate_forcing(T=t)
-        # Solve Burgers equation
-        v1 = diffuse.explicit(velocity_in, self.viscosity, dt) + self.forcing * dt
-        v2 = advect.semi_lagrangian(v1, v1, dt)
-        return v2
+        advection = advect.finite_difference(velocity, velocity, order = 2, implicit=False)
+        diffusion = diffuse.finite_difference(velocity, self.viscosity, order = 2, implicit=False)
+        return advection + diffusion + self.forcing
         
     def downsample4x(self, velocity):
         return CenteredGrid(math.downsample2x(math.downsample2x(velocity.values, velocity.extrapolation)), bounds=velocity.bounds, extrapolation=velocity.extrapolation)
