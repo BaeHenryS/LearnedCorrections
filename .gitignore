@@ -9,4 +9,10 @@
 1d-test/1d-burgers-spectral/spectral_train/
 output/
 .DS_Store
-.DS_Store
+1-d/1d-burgers/jobs
+1-d/1d-burgers/output_old
+simulation_output
+1-d/1d-burgers/output_test/
+1-d/test_output/
+2d-navierstokes/__pycache__/
+2d-navierstokes/jobs/
